@@ -32,11 +32,13 @@ import {
   coveredFilePath,
   ciRunUrl,
   itemizeVcs,
+  teamAssignment,
 } from './transforms';
 import { resolve } from 'path';
 import { createReadStream } from 'fs';
 import readline from 'readline';
 import * as moment from 'moment';
+import { getData } from './team_assignment/get_data';
 
 const ROOT = '../../../..';
 const COVERAGE_INGESTION_KIBANA_ROOT =
@@ -50,9 +52,10 @@ const addPrePopulatedTimeStamp = addTimeStamp(process.env.TIME_STAMP || formatte
 const preamble = pipe(statsAndstaticSiteUrl, rootDirAndOrigPath, buildId, addPrePopulatedTimeStamp);
 const addTestRunnerAndStaticSiteUrl = pipe(testRunner, staticSite(staticSiteUrlBase));
 
-const transform = (jsonSummaryPath) => (log) => (vcsInfo) => {
+const transform = (jsonSummaryPath) => (log) => (vcsInfo) => (teamAssignmentsPath) => {
   const objStream = jsonStream(jsonSummaryPath).on('done', noop);
   const itemizeVcsInfo = itemizeVcs(vcsInfo);
+  const assignTeams = teamAssignment(getData)(teamAssignmentsPath)(log);
 
   const jsonSummary$ = (_) => objStream.on('node', '!.*', _);
 
@@ -64,6 +67,7 @@ const transform = (jsonSummaryPath) => (log) => (vcsInfo) => {
       map(ciRunUrl),
       map(addJsonSummaryPath(jsonSummaryPath)),
       map(addTestRunnerAndStaticSiteUrl),
+      map(assignTeams),
       concatMap((x) => of(x).pipe(delay(ms)))
     )
     .subscribe(ingest(log));
@@ -83,7 +87,7 @@ const vcsInfoLines$ = (vcsInfoFilePath) => {
   return fromEvent(rl, 'line').pipe(takeUntil(fromEvent(rl, 'close')));
 };
 
-export const prok = ({ jsonSummaryPath, vcsInfoFilePath }, log) => {
+export const prok = ({ jsonSummaryPath, vcsInfoFilePath, teamAssignmentsPath }, log) => {
   validateRoot(COVERAGE_INGESTION_KIBANA_ROOT, log);
   logAll(jsonSummaryPath, log);
 
@@ -93,7 +97,7 @@ export const prok = ({ jsonSummaryPath, vcsInfoFilePath }, log) => {
   vcsInfoLines$(vcsInfoFilePath).subscribe(
     mutateVcsInfo(vcsInfo),
     (err) => log.error(err),
-    always(xformWithPath(vcsInfo))
+    always(xformWithPath(vcsInfo)(teamAssignmentsPath))
   );
 };
 

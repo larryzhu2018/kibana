@@ -19,7 +19,7 @@
 
 import * as Either from './either';
 import { fromNullable } from './maybe';
-import { always, id, noop } from './utils';
+import { always, id, noop, pink, pretty } from './utils';
 
 const maybeTotal = (x) => (x === 'total' ? Either.left(x) : Either.right(x));
 
@@ -97,6 +97,39 @@ export const coveredFilePath = (obj) => {
     .fold(withoutCoveredFilePath, (coveredFilePath) => ({ ...obj, coveredFilePath }));
 };
 
+const globalAndMultiline = 'gm';
+const findLine = (x) => (xs) => xs.match(new RegExp(`${x}.*$`, globalAndMultiline));
+const findTeam = (x) => x.match(/.+\s{1,3}(.+)$/, globalAndMultiline);
+
+export const teamAssignment = (getData) => (teamAssignmentsPath) => (log) => (obj) => {
+  log.debug(`\n### Team Assignment - obj from stream: \n\t${pink(pretty(obj))}`);
+  const { coveredFilePath } = obj;
+
+  const findPath = findLine(coveredFilePath);
+  log.debug(`\n### Team Assignment - coveredFilePath: \n\t${pink(coveredFilePath)}`);
+  const data = getData(teamAssignmentsPath);
+  const size = data.split('\n').length;
+  log.debug(`\n### Team Assignment - assignments count: \n\t${pink(size)}`);
+
+  const found = findPath(data);
+  log.debug(`\n### Team Assignment - foundLine: \n\t${pink(found)}`);
+  const line = found[0];
+  log.debug(`\n### Team Assignment - line: \n\t${pink(line)}`);
+
+  const foundTeam = findTeam(line);
+  log.debug(`\n### Team Assignment - foundTeam: \n\t${pink(foundTeam)}`);
+  const team = foundTeam[1];
+  log.debug(`\n### Team Assignment - team: \n\t${pink(team)}`);
+
+  // const team = getData(teamAssignmentsPath)
+  //   .match(new RegExp(`${coveredFilePath}.*$`, 'gm'))[0]
+  //   .match(/.+\s{1,3}(.+)$/, 'gm')[1];
+
+  return {
+    team,
+    ...obj,
+  };
+};
 export const ciRunUrl = (obj) =>
   Either.fromNullable(process.env.CI_RUN_URL).fold(always(obj), (ciRunUrl) => ({
     ...obj,
@@ -132,7 +165,6 @@ export const itemizeVcs = (vcsInfo) => (obj) => {
     ? `${comparePrefix()}/${process.env.FETCHED_PREVIOUS}...${sha}`
     : 'PREVIOUS SHA NOT PROVIDED';
 
-  // const withoutPreviousL = always({ ...obj, vcs });
   const withPreviousR = () => ({
     ...obj,
     vcs: {
