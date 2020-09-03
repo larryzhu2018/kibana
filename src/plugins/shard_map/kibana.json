@@ -1,0 +1,8 @@
+{
+  "id": "shardMap",
+  "version": "7.8.2",
+  "server": true,
+  "ui": true,
+  "requiredPlugins": ["navigation"],
+  "optionalPlugins": []
+}
