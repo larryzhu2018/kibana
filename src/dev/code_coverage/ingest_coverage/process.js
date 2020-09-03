@@ -55,7 +55,7 @@ const addTestRunnerAndStaticSiteUrl = pipe(testRunner, staticSite(staticSiteUrlB
 const transform = (jsonSummaryPath) => (log) => (vcsInfo) => (teamAssignmentsPath) => {
   const objStream = jsonStream(jsonSummaryPath).on('done', noop);
   const itemizeVcsInfo = itemizeVcs(vcsInfo);
-  const assignTeams = teamAssignment(getData)(teamAssignmentsPath)(log);
+  const assignTeams = teamAssignment(getData)(teamAssignmentsPath);
 
   const jsonSummary$ = (_) => objStream.on('node', '!.*', _);
 

@@ -18,8 +18,8 @@
  */
 
 import * as Either from './either';
-import { fromNullable } from './maybe';
-import { always, id, noop, pink, pretty } from './utils';
+import * as Maybe from './maybe';
+import { always, id, noop } from './utils';
 
 const maybeTotal = (x) => (x === 'total' ? Either.left(x) : Either.right(x));
 
@@ -97,38 +97,18 @@ export const coveredFilePath = (obj) => {
     .fold(withoutCoveredFilePath, (coveredFilePath) => ({ ...obj, coveredFilePath }));
 };
 
-const globalAndMultiline = 'gm';
-const findLine = (x) => (xs) => xs.match(new RegExp(`${x}.*$`, globalAndMultiline));
-const findTeam = (x) => x.match(/.+\s{1,3}(.+)$/, globalAndMultiline);
+const assign = (getData) => (teamAssignmentsPath) => (x) =>
+  getData(teamAssignmentsPath)
+    .match(new RegExp(`${x}.*$`, 'gm'))[0]
+    .match(/.+\s{1,3}(.+)$/, 'gm')[1];
 
-export const teamAssignment = (getData) => (teamAssignmentsPath) => (log) => (obj) => {
-  log.debug(`\n### Team Assignment - obj from stream: \n\t${pink(pretty(obj))}`);
+export const teamAssignment = (getData) => (teamAssignmentsPath) => (obj) => {
   const { coveredFilePath } = obj;
+  const assignTeams = assign(getData)(teamAssignmentsPath);
 
-  const findPath = findLine(coveredFilePath);
-  log.debug(`\n### Team Assignment - coveredFilePath: \n\t${pink(coveredFilePath)}`);
-  const data = getData(teamAssignmentsPath);
-  const size = data.split('\n').length;
-  log.debug(`\n### Team Assignment - assignments count: \n\t${pink(size)}`);
-
-  const found = findPath(data);
-  log.debug(`\n### Team Assignment - foundLine: \n\t${pink(found)}`);
-  const line = found[0];
-  log.debug(`\n### Team Assignment - line: \n\t${pink(line)}`);
-
-  const foundTeam = findTeam(line);
-  log.debug(`\n### Team Assignment - foundTeam: \n\t${pink(foundTeam)}`);
-  const team = foundTeam[1];
-  log.debug(`\n### Team Assignment - team: \n\t${pink(team)}`);
-
-  // const team = getData(teamAssignmentsPath)
-  //   .match(new RegExp(`${coveredFilePath}.*$`, 'gm'))[0]
-  //   .match(/.+\s{1,3}(.+)$/, 'gm')[1];
-
-  return {
-    team,
-    ...obj,
-  };
+  return Either.fromNullable(obj.isTotal).isRight()
+    ? obj
+    : { team: assignTeams(coveredFilePath), ...obj };
 };
 export const ciRunUrl = (obj) =>
   Either.fromNullable(process.env.CI_RUN_URL).fold(always(obj), (ciRunUrl) => ({
@@ -159,7 +139,7 @@ export const itemizeVcs = (vcsInfo) => (obj) => {
   };
 
   const mutateVcs = (x) => (vcs.commitMsg = truncateMsg(x));
-  fromNullable(commitMsg).map(mutateVcs);
+  Maybe.fromNullable(commitMsg).map(mutateVcs);
 
   const vcsCompareUrl = process.env.FETCHED_PREVIOUS
     ? `${comparePrefix()}/${process.env.FETCHED_PREVIOUS}...${sha}`
