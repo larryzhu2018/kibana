@@ -19,7 +19,7 @@
 
 import * as Either from './either';
 import * as Maybe from './maybe';
-import { always, id, noop } from './utils';
+import { always, id, noop, pink } from './utils';
 
 const maybeTotal = (x) => (x === 'total' ? Either.left(x) : Either.right(x));
 
@@ -102,8 +102,11 @@ const assign = (getData) => (teamAssignmentsPath) => (x) =>
     .match(new RegExp(`${x}.*$`, 'gm'))[0]
     .match(/.+\s{1,3}(.+)$/, 'gm')[1];
 
-export const teamAssignment = (getData) => (teamAssignmentsPath) => (obj) => {
+export const teamAssignment = (getData) => (teamAssignmentsPath) => (log) => (obj) => {
   const { coveredFilePath } = obj;
+
+  log.debug(`\n### Team Assignment - coveredFilePath: \n\t${pink(coveredFilePath)}\n`);
+
   const assignTeams = assign(getData)(teamAssignmentsPath);
 
   return Either.fromNullable(obj.isTotal).isRight()

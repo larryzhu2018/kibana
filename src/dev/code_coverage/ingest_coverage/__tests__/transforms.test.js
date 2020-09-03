@@ -19,6 +19,7 @@
 
 import expect from '@kbn/expect';
 import { ciRunUrl, coveredFilePath, itemizeVcs, prokPrevious, teamAssignment } from '../transforms';
+import { ToolingLog } from '@kbn/dev-utils';
 
 describe(`Transform fn`, () => {
   describe(`ciRunUrl`, () => {
@@ -93,11 +94,15 @@ x-pack/plugins/reporting/server/browsers/extract/index.js kibana-reporting
 x-pack/plugins/reporting/server/browsers/extract/unzip.js kibana-reporting
 x-pack/plugins/reporting/server/browsers/index.ts kibana-reporting
 x-pack/plugins/reporting/server/browsers/install.ts kibana-reporting`;
+    const log = new ToolingLog({
+      level: 'info',
+      writeTo: process.stdout,
+    });
 
     describe(`with a coveredFilePath of ${coveredFilePath}`, () => {
       const expected = 'kibana-reporting';
       it(`should resolve to ${expected}`, () => {
-        const actual = teamAssignment(getData)(teamAssignmentsPath)(obj);
+        const actual = teamAssignment(getData)(teamAssignmentsPath)(log)(obj);
         const { team } = actual;
         expect(team).to.eql(expected);
       });

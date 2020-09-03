@@ -21,7 +21,7 @@ const { Client } = require('@elastic/elasticsearch');
 import { createFailError } from '@kbn/dev-utils';
 import { RESEARCH_CI_JOB_NAME } from './constants';
 import { errMsg, redact, whichIndex } from './ingest_helpers';
-import { pretty, green, pink } from './utils';
+import { pretty, green } from './utils';
 import { right, left } from './either';
 
 const node = process.env.ES_HOST || 'http://localhost:9200';
@@ -75,7 +75,7 @@ const sendMsg = (actuallySent, redactedEsHostUrl, payload) => {
   return `### ${actuallySent ? 'Sent' : 'Fake Sent'}:
 ${redactedEsHostUrl ? `\t### ES Host: ${redactedEsHostUrl}` : ''}
 \t### Index: ${green(index)}
-\t### payload.body: ${pink(body)}
+\t### payload.body: ${body}
 `;
 };
 
