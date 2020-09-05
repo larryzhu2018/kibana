@@ -35,7 +35,15 @@ import {
   EuiInMemoryTable,
 } from '@elastic/eui';
 import { htmlIdGenerator } from '@elastic/eui/lib/services';
-import { ApolloClient, useQuery, useMutation, ApolloProvider, InMemoryCache } from '@apollo/client';
+import {
+  ApolloClient,
+  useQuery,
+  useMutation,
+  ApolloProvider,
+  InMemoryCache,
+  from,
+  createHttpLink,
+} from '@apollo/client';
 import { LIST_NODES, LIST_SHARDS, MOVE_SHARD } from './query';
 import { PLUGIN_ID } from '../../common';
 import { NavigationPublicPluginStart } from '../../../../../src/plugins/navigation/public';
@@ -170,7 +178,7 @@ const Table3 = ({ data }) => {
   return <EuiInMemoryTable items={data} columns={columns} pagination={false} sorting={sorting} />;
 };
 export const Table = () => {
-  const [indexName, setIndexName] = useState('.monitoring-kibana*');
+  const [indexName, setIndexName] = useState('cim-*');
   const onChangeIndexName = (e) => {
     setIndexName(e.target.value);
   };
@@ -246,7 +254,13 @@ interface ShardmapAppDeps {
 export const ShardMapApp = ({ basename, notifications, http, navigation }: ShardmapAppDeps) => {
   // Use React hooks to manage state.
   const client = new ApolloClient({
-    uri: 'http://localhost:8080/query',
+    link: from([
+      createHttpLink({
+        credentials: 'same-origin',
+        headers: { 'kbn-xsrf': 'true' },
+        uri: `${http.basePath.get()}/api/shard_map/query`,
+      }),
+    ]),
     cache: new InMemoryCache(),
   });
   // Render the application DOM.
