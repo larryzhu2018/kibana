@@ -17,20 +17,59 @@
  * under the License.
  */
 
+import { schema } from '@kbn/config-schema';
+import http from 'http';
 import { IRouter } from '../../../../../src/core/server';
 
-export function defineRoutes(router: IRouter) {
-  router.get(
-    {
-      path: '/api/shard_map/example',
-      validate: false,
-    },
-    async (context, request, response) => {
-      return response.ok({
-        body: {
-          time: new Date().toISOString(),
-        },
+async function doRequest(options) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (resp) => {
+      let body = '';
+
+      resp.on('data', (chunk) => {
+        body += chunk;
       });
+
+      resp.on('end', (res) => {
+        resolve(body);
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+    req.write(options.body);
+    req.end();
+  });
+}
+
+export function defineRoutes(router: IRouter) {
+  router.post(
+    {
+      path: '/api/shard_map/query',
+      validate: {
+        params: schema.object({}, { unknowns: 'allow' }),
+        body: schema.object({}, { unknowns: 'allow' }),
+        query: schema.object({}, { unknowns: 'allow' }),
+      },
+    },
+    async (ctx, req, resp) => {
+      try {
+        const ret = await doRequest({
+          method: 'POST',
+          host: 'shardmap.tf',
+          port: 8000,
+          path: '/query',
+          body: JSON.stringify(req.body),
+          headers: {
+            'content-type': 'application/json',
+          },
+        });
+        return resp.ok({ body: ret });
+      } catch (err) {
+        // console.log('doRequest', err);
+        return resp.badRequest({ body: err });
+      }
     }
   );
 }
