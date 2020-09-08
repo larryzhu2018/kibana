@@ -57,7 +57,7 @@ export function defineRoutes(router: IRouter) {
       try {
         const ret = await doRequest({
           method: 'POST',
-          host: 'shardmap.tf',
+          host: 'localhost',
           port: 8000,
           path: '/query',
           body: JSON.stringify(req.body),

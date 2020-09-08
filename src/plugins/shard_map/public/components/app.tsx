@@ -49,11 +49,28 @@ import { PLUGIN_ID } from '../../common';
 import { NavigationPublicPluginStart } from '../../../../../src/plugins/navigation/public';
 import { CoreStart } from '../../../../../src/core/public';
 const makeId = htmlIdGenerator();
+
+function matchRuleShort(str: string, rule: string) {
+  const escapeRegex = (x) => x.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1');
+  return new RegExp('^' + rule.split('*').map(escapeRegex).join('.*') + '$').test(str);
+}
+
+function getIndexFriendlyName(str) {
+  if (matchRuleShort(str, 'cim-*-span-*')) {
+    const res = str.split('-');
+    return res[1];
+  }
+  return str;
+}
+
 export const loadData = (nodes: any, shards: any) => {
   const indexMap = new Map();
   const nodeMap = new Map();
   for (let i = 0; i < shards.length; i++) {
     const shard = shards[i];
+    const name = getIndexFriendlyName(shard.index);
+
+    // console.log('shard [' + i + ']', name, shard.index, shard.shard);
     if (!(shard.node in nodeMap)) {
       nodeMap.set(shard.node, 0);
     }
@@ -63,6 +80,7 @@ export const loadData = (nodes: any, shards: any) => {
     nodeMap.set(shard.node, nodeMap.get(shard.node) + shard.indexingRate);
     indexMap.set(shard.index, indexMap.get(shard.index) + shard.indexingRate);
   }
+
   const nodesArray: any = [];
   nodes.forEach((node: any) => {
     let value = 0;
@@ -80,6 +98,7 @@ export const loadData = (nodes: any, shards: any) => {
   );
   return [nodesArray, indicesArray];
 };
+
 const Node = ({ node, shards }) => {
   return (
     <EuiToolTip position="right" content={node.name}>
