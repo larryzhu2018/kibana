@@ -18,11 +18,11 @@
  */
 // yarn test:jest --watch -t testing src/plugins/shard_map/public/components/app.test.ts
 import { ApolloClient, InMemoryCache } from '@apollo/client';
-import { LIST_NODES, LIST_SHARDS /* , MOVE_SHARD*/ } from './query';
-import { loadData } from './app';
-
 import fs from 'fs';
 import { promisify } from 'util';
+
+import { LIST_NODES, LIST_SHARDS /* , MOVE_SHARD*/ } from './query';
+import { loadData } from './app';
 
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
@@ -32,8 +32,8 @@ test('loading data', async () => {
     uri: 'http://localhost:8000/query',
     cache: new InMemoryCache(),
   });
-  let res;
-  res = await client.query({
+
+  let res = await client.query({
     query: LIST_SHARDS,
     variables: {
       filter: 'cim-*',
@@ -53,14 +53,16 @@ test('loading data', async () => {
 
   data = JSON.stringify(nodes, null, 2);
   await writeFileAsync('nodes.json', data);
-});
+}, 10000);
 
 test('testing data', async () => {
   let data = await readFileAsync('shards.json');
   const shards = JSON.parse(data.toString());
   data = await readFileAsync('nodes.json');
   const nodes = JSON.parse(data.toString());
-  const res = loadData(nodes, shards);
-  // console.log('res', res.length);
-  // console.log('res', res);
+  // console.log(nodes);
+  // console.log(shards);
+  const [na, ia] = loadData(nodes, shards);
+  // console.log('nodes', na.length);
+  // console.log('indices', ia);
 });

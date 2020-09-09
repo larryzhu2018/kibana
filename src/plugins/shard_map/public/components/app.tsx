@@ -51,12 +51,12 @@ import { CoreStart } from '../../../../../src/core/public';
 const makeId = htmlIdGenerator();
 
 function matchRuleShort(str: string, rule: string) {
-  const escapeRegex = (x) => x.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1');
+  const escapeRegex = (x: string) => x.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1');
   return new RegExp('^' + rule.split('*').map(escapeRegex).join('.*') + '$').test(str);
 }
 
-function getIndexFriendlyName(str) {
-  if (matchRuleShort(str, 'cim-*-span-*')) {
+function getIndexFriendlyName(str: string) {
+  if (matchRuleShort(str, 'cim-*-span*')) {
     const res = str.split('-');
     return res[1];
   }
@@ -68,7 +68,8 @@ export const loadData = (nodes: any, shards: any) => {
   const nodeMap = new Map();
   for (let i = 0; i < shards.length; i++) {
     const shard = shards[i];
-    const name = getIndexFriendlyName(shard.index);
+    const name = getIndexFriendlyName(shard.name);
+    shard.name = name;
 
     // console.log('shard [' + i + ']', name, shard.index, shard.shard);
     if (!(shard.node in nodeMap)) {
@@ -118,7 +119,7 @@ const Node = ({ node, shards }) => {
     </EuiToolTip>
   );
 };
-const getColor = (state) => {
+const getColor = (state: string) => {
   switch (state) {
     case 'STARTED':
       return '#017D73';
@@ -141,11 +142,11 @@ const Shard = ({ index, shard }) => {
       {(provided, state) => (
         <EuiToolTip
           position="right"
-          content={'name ' + shard.name + ' id ' + shard.id + ' state ' + shard.state}
+          content={'name ' + shard.index + ' id ' + shard.id + ' state ' + shard.state}
         >
           <EuiPanel key={makeId()} hasShadow={state.isDragging}>
             <div style={{ color: getColor(shard.state) }}>
-              {shard.index + ':' + shard.shard + ':' + shard.prirep}
+              {getIndexFriendlyName(shard.name) + ':' + shard.shard + ':' + shard.prirep}
               {state.isDragging && ' ✨'}
             </div>
           </EuiPanel>
