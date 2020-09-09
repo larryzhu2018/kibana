@@ -22,7 +22,7 @@ import fs from 'fs';
 import { promisify } from 'util';
 
 import { LIST_NODES, LIST_SHARDS /* , MOVE_SHARD*/ } from './query';
-import { loadData } from './app';
+import { loadData, getIndexFriendlyName } from './app';
 
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
@@ -47,13 +47,12 @@ test('loading data', async () => {
 
   let data = JSON.stringify(shards, null, 2);
   await writeFileAsync('shards.json', data);
-
+  // console.log('shards', data);
   const nodes = res.data.nodes;
-  // console.log('shards', shards.length);
 
   data = JSON.stringify(nodes, null, 2);
   await writeFileAsync('nodes.json', data);
-}, 10000);
+}, 20000);
 
 test('testing data', async () => {
   let data = await readFileAsync('shards.json');
@@ -62,6 +61,8 @@ test('testing data', async () => {
   const nodes = JSON.parse(data.toString());
   // console.log(nodes);
   // console.log(shards);
+  const name = getIndexFriendlyName('cim-c-syslog-span-2020.09.09-000373');
+  // console.log(name);
   const [na, ia] = loadData(nodes, shards);
   // console.log('nodes', na.length);
   // console.log('indices', ia);

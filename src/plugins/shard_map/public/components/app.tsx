@@ -55,10 +55,11 @@ function matchRuleShort(str: string, rule: string) {
   return new RegExp('^' + rule.split('*').map(escapeRegex).join('.*') + '$').test(str);
 }
 
-function getIndexFriendlyName(str: string) {
+export function getIndexFriendlyName(str: string) {
   if (matchRuleShort(str, 'cim-*-span*')) {
-    const res = str.split('-');
-    return res[1];
+    const offset = str.indexOf('-span');
+
+    return str.substring('cim-'.length, offset);
   }
   return str;
 }
@@ -68,8 +69,6 @@ export const loadData = (nodes: any, shards: any) => {
   const nodeMap = new Map();
   for (let i = 0; i < shards.length; i++) {
     const shard = shards[i];
-    const name = getIndexFriendlyName(shard.name);
-    shard.name = name;
 
     // console.log('shard [' + i + ']', name, shard.index, shard.shard);
     if (!(shard.node in nodeMap)) {
@@ -142,7 +141,7 @@ const Shard = ({ index, shard }) => {
       {(provided, state) => (
         <EuiToolTip
           position="right"
-          content={'name ' + shard.index + ' id ' + shard.id + ' state ' + shard.state}
+          content={'index ' + shard.index + ' shard ' + shard.shard + ' state ' + shard.state}
         >
           <EuiPanel key={makeId()} hasShadow={state.isDragging}>
             <div style={{ color: getColor(shard.state) }}>
