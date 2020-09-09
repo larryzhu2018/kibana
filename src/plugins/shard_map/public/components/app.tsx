@@ -238,13 +238,19 @@ export const Table = () => {
       // console.log(res.data);
     }
   };
-  const { loading: loadingNodes, error: errorNodes, data: dataNodes } = useQuery(LIST_NODES);
+
+  const { loading: loadingNodes, error: errorNodes, data: dataNodes } = useQuery(LIST_NODES, {
+    pollInterval: 15000,
+  });
   const { loading: loadingShards, error: errorShards, data: dataShards } = useQuery(LIST_SHARDS, {
     variables: {
       filter: indexName,
     },
+    pollInterval: 15000,
   });
+
   const [moveShard] = useMutation(MOVE_SHARD);
+
   if (loadingNodes) return <p>Loading nodes ...</p>;
   if (errorNodes) return <p>`Error in loading nodes! {errorNodes.message}`</p>;
   if (loadingShards) return <p>Loading shards ...</p>;
