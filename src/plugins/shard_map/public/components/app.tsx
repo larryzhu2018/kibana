@@ -70,12 +70,33 @@ export const loadData = (nodes: any, shards: any) => {
   for (let i = 0; i < shards.length; i++) {
     const shard = shards[i];
 
-    // console.log('shard [' + i + ']', name, shard.index, shard.shard);
-    if (!(shard.node in nodeMap)) {
+    // console.log(
+    //   'shard [' + i + ']',
+    //   getIndexFriendlyName(shard.index),
+    //   shard.index,
+    //   shard.shard,
+    //   shard.prirep
+    // );
+    if (!nodeMap.has(shard.node)) {
       nodeMap.set(shard.node, 0);
     }
-    if (!(shard.index in indexMap)) {
+    if (!indexMap.has(shard.index)) {
       indexMap.set(shard.index, 0);
+      // console.log(
+      //   'new index [' + i + ']',
+      //   getIndexFriendlyName(shard.index),
+      //   shard.index,
+      //   shard.shard,
+      //   shard.prirep
+      // ;
+    } else {
+      // console.log(
+      //   'add rate [' + i + ']',
+      //   getIndexFriendlyName(shard.index),
+      //   shard.index,
+      //   shard.shard,
+      //   shard.prirep
+      // );
     }
     nodeMap.set(shard.node, nodeMap.get(shard.node) + shard.indexingRate);
     indexMap.set(shard.index, indexMap.get(shard.index) + shard.indexingRate);
@@ -90,12 +111,13 @@ export const loadData = (nodes: any, shards: any) => {
     nodesArray.push({ node: node.name, indexingRate: value > 0 ? value : 0 });
   });
   const indicesArray: any = [];
-  indexMap.forEach((value, key, map) =>
+  indexMap.forEach((value, key) => {
+    // console.log('key ' + key + ' value ' + value);
     indicesArray.push({
       index: key,
       indexingRate: value > 0 ? Math.round(value / 60) * 1.0 : 0,
-    })
-  );
+    });
+  });
   return [nodesArray, indicesArray];
 };
 

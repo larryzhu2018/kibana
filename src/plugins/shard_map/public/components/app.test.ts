@@ -27,6 +27,21 @@ import { loadData, getIndexFriendlyName } from './app';
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 
+function summarize(shards) {
+  let ret = 'count ' + shards.length + ' %d [ ';
+  const set = new Set();
+  for (let i = 0; i < shards.length; i++) {
+    const name = getIndexFriendlyName(shards[i].name);
+    set.add(name);
+  }
+  const keys = [...set];
+  keys.sort();
+  for (let i = 0; i < keys.length; i++) {
+    ret += keys[i] + ' ';
+  }
+  return ret + '] ' + keys.length + ' unique keys';
+}
+
 test('loading data', async () => {
   const client = new ApolloClient({
     uri: 'http://localhost:8000/query',
@@ -41,6 +56,18 @@ test('loading data', async () => {
   });
 
   const shards = res.data.shards;
+  for (let i = 0; i < shards.length; i++) {
+    const shard = shards[i];
+
+    // console.log(
+    //   'shard [' + i + ']',
+    //   getIndexFriendlyName(shard.index),
+    //   shard.index,
+    //   shard.shard,
+    //   shard.prirep
+    // );
+  }
+
   res = await client.query({
     query: LIST_NODES,
   });
@@ -57,6 +84,7 @@ test('loading data', async () => {
 test('testing data', async () => {
   let data = await readFileAsync('shards.json');
   const shards = JSON.parse(data.toString());
+  // console.log('summary shards', summarize(shards));
   data = await readFileAsync('nodes.json');
   const nodes = JSON.parse(data.toString());
   // console.log(nodes);
