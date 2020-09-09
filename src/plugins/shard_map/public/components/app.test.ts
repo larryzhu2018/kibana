@@ -56,17 +56,18 @@ test('loading data', async () => {
   });
 
   const shards = res.data.shards;
-  for (let i = 0; i < shards.length; i++) {
-    const shard = shards[i];
-
-    // console.log(
-    //   'shard [' + i + ']',
-    //   getIndexFriendlyName(shard.index),
-    //   shard.index,
-    //   shard.shard,
-    //   shard.prirep
-    // );
-  }
+  // console.log(shards);
+  // for (let i = 0; i < shards.length; i++) {
+  //   const shard = shards[i];
+  //
+  //   console.log(
+  //     'shard [' + i + ']',
+  //     getIndexFriendlyName(shard.index),
+  //     shard.index,
+  //     shard.shard,
+  //     shard.prirep
+  //   );
+  // }
 
   res = await client.query({
     query: LIST_NODES,
