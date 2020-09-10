@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { i18n } from '@kbn/i18n';
+
 import { I18nProvider } from '@kbn/i18n/react';
 import { EuiPage, EuiPageBody, EuiPageContent, EuiPageContentBody } from '@elastic/eui';
 import React, { Fragment, useState } from 'react';
@@ -106,16 +106,16 @@ export const loadData = (nodes: any, shards: any) => {
   nodes.forEach((node: any) => {
     let value = 0;
     if (nodeMap.has(node.name)) {
-      value = Math.round(nodeMap.get(node.name) / 60) * 1.0;
+      value = nodeMap.get(node.name);
     }
-    nodesArray.push({ node: node.name, indexingRate: value > 0 ? value : 0 });
+    nodesArray.push({ node: node.name, indexingRate: value / 100.0 });
   });
   const indicesArray: any = [];
   indexMap.forEach((value, key) => {
     // console.log('key ' + key + ' value ' + value);
     indicesArray.push({
       index: key,
-      indexingRate: value > 0 ? Math.round(value / 60) * 1.0 : 0,
+      indexingRate: value / 100.0,
     });
   });
   return [nodesArray, indicesArray];
@@ -255,15 +255,24 @@ export const Table = () => {
   if (errorNodes) return <p>`Error in loading nodes! {errorNodes.message}`</p>;
   if (loadingShards) return <p>Loading shards ...</p>;
   if (errorShards) return <p>`Error in loading shards! {errorShards.message}`</p>;
-  const shardMap = {};
+  const shards = [];
   for (let i = 0; i < dataShards.shards.length; i++) {
     const shard = dataShards.shards[i];
+    if (shard.indexingRate === 0) {
+      continue;
+    }
+    shards.push(shard);
+  }
+  const shardMap = {};
+  for (let i = 0; i < shards.length; i++) {
+    const shard = shards[i];
     if (!(shard.node in shardMap)) {
       shardMap[shard.node] = [];
     }
     shardMap[shard.node].push(shard);
   }
-  const [nodeData, indexData] = loadData(dataNodes.nodes, dataShards.shards);
+
+  const [nodeData, indexData] = loadData(dataNodes.nodes, shards);
   return (
     <Fragment>
       <EuiFieldText
